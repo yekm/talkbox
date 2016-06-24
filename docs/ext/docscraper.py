@@ -5,6 +5,7 @@ from warnings import warn
 from docutils.statemachine import StringList
 
 import sphinx.ext.autodoc as autodoc
+import collections
 
 
 #--- Defaults -----------------------------------------------------------------
@@ -149,7 +150,7 @@ class Docstring(list):
         if isinstance(text, Docstring):
             rawdoc = text
         # Use autodoc.prepare_docstring on strings
-        elif isinstance(text, basestring):
+        elif isinstance(text, str):
             rawdoc = autodoc.prepare_docstring(text)
             # Careful: prepare_docstring adds an extra blank line...
             rawdoc.pop(-1)
@@ -399,7 +400,7 @@ class NumpyDocString(Docstring):
 
 
     def __getitem__(self, item):
-        if isinstance(item, basestring):
+        if isinstance(item, str):
             return self.section[item]
         #print "NUmpyDocString[%s]:%s" % (item, '\n'.join(self))
         try:
@@ -408,13 +409,13 @@ class NumpyDocString(Docstring):
             return ''
 
     def __setitem__(self, item, value):
-        if isinstance(item, basestring):
+        if isinstance(item, str):
             self.section[item] = value
         else:
             Docstring.__setitem__(self, item, value)
 
     def __delitem__(self, item):
-        if isinstance(item, basestring):
+        if isinstance(item, str):
             del self.section[item]
         else:
             Docstring.__delitem__(self, item)
@@ -478,9 +479,9 @@ class NumpyDocString(Docstring):
             i += 1
         #
         self.section_slices = dict([(h, slice(s[0],s[1]))
-                                    for (h,s) in sectidx.iteritems()])
+                                    for (h,s) in sectidx.items()])
         self.section.update([(h, self[s[0]:s[1]])
-                             for (h,s) in sectidx.iteritems()])
+                             for (h,s) in sectidx.items()])
         #
         for header in ['Parameters', 'Returns', 'Raises', 'Warns']:
             self._fix_description(header)
@@ -694,7 +695,7 @@ class NumpyDocString(Docstring):
         idx = self._split_index()
         out = []
         out += ['.. index:: %s' % idx.get('default','')]
-        for section, references in idx.iteritems():
+        for section, references in idx.items():
             if section == 'default':
                 continue
             out += ['   :%s: %s' % (section, ', '.join(references))]
@@ -746,10 +747,10 @@ class FunctionDoc(NumpyDocString):
                                     role=role,
                                     block_format=block_format,
                                     list_format=list_format)
-        except ValueError, e:
-            print '*'*78
-            print "ERROR: '%s' while parsing `%s`" % (e, self._f)
-            print '*'*78
+        except ValueError as e:
+            print('*'*78)
+            print("ERROR: '%s' while parsing `%s`" % (e, self._f))
+            print('*'*78)
             #print "Docstring follows:"
             #print doclines
             #print '='*78
@@ -778,7 +779,7 @@ class FunctionDoc(NumpyDocString):
         if self._role:
             role = roles.get(self._role, '')
             if not role:
-                print "Warning: invalid role %s" % self._role
+                print("Warning: invalid role %s" % self._role)
             sig = self['Signature']
             if not self['Signature']:
                 self['Signature'] = self._get_signature()
@@ -816,7 +817,7 @@ class ClassDoc(NumpyDocString):
     @property
     def methods(self):
         return [name for (name, func) in inspect.getmembers(self._cls)
-                if not name.startswith('_') and callable(func)]
+                if not name.startswith('_') and isinstance(func, collections.Callable)]
 
     def __str__(self):
         out = ''
@@ -866,7 +867,7 @@ class SphinxDocString(NumpyDocString):
         
         out = []
         out += ['.. index:: %s' % idx.get('default','')]
-        for section, references in idx.iteritems():
+        for section, references in idx.items():
             if section == 'default':
                 continue
             elif section == 'refguide':

@@ -7,7 +7,7 @@ from scipy.fftpack.realtransforms import dct
 
 from scikits.talkbox import segment_axis
 
-from mel import hz2mel
+from .mel import hz2mel
 
 def trfbank(fs, nfft, lowfreq, linsc, logsc, nlinfilt, nlogfilt):
     """Compute triangular filterbank for MFCC computation."""

@@ -208,8 +208,17 @@ static PyMethodDef lpcmethods[] = {
 	{"levinson", PyArray_Levinson, METH_VARARGS, NULL}
 };
 
-PyMODINIT_FUNC init_lpc(void)
+static struct PyModuleDef cModPyLPC =
 {
-	Py_InitModule("_lpc", lpcmethods);
+    PyModuleDef_HEAD_INIT,
+    "_lpc", /* name of module */
+    "",          /* module documentation, may be NULL */
+    -1,          /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+    lpcmethods
+};
+
+PyMODINIT_FUNC PyInit__lpc(void)
+{
 	import_array();
+	return PyModule_Create(&cModPyLPC);
 }

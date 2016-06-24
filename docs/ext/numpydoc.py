@@ -29,6 +29,7 @@ import sphinx.ext.autodoc as autodoc
 
 from docscraper import NumpyDocString, SphinxDocString, SphinxClassDoc,\
     SphinxFunctionDoc
+import collections
 
 #-------------------------------------------------------------------------------
 #--- .. numpydirectives::
@@ -134,7 +135,7 @@ def get_autosummary(names, document):
     prefixes = ['']
     prefixes.append(document.settings.env.currmodule)
 
-    max_name_len = max(map(len, names)) + 7
+    max_name_len = max(list(map(len, names))) + 7
     link_fmt = '%%-%ds' % max_name_len
 
     table_banner = ('='*max_name_len) + '  ' + '==============='
@@ -182,7 +183,7 @@ def _import_by_name(name):
         name_parts = name.split('.')
         last_j = 0
         modname = None
-        for j in reversed(range(1, len(name_parts)+1)):
+        for j in reversed(list(range(1, len(name_parts)+1))):
             last_j = j
             modname = '.'.join(name_parts[:j])
             try:
@@ -199,7 +200,7 @@ def _import_by_name(name):
             return obj
         else:
             return sys.modules[modname]
-    except (ValueError, ImportError, AttributeError, KeyError), e:
+    except (ValueError, ImportError, AttributeError, KeyError) as e:
         raise ImportError(e)
 
 
@@ -248,7 +249,7 @@ def import_phantom_module(xml_file):
                 doc = "%s%s\n\n%s" % (funcname, argspec, doc)
             obj = lambda: 0
             obj.__argspec_is_invalid_ = True
-            obj.func_name = funcname
+            obj.__name__ = funcname
             obj.__name__ = name
             obj.__doc__ = doc
         else:
@@ -311,7 +312,7 @@ def mangle_docstrings(app, what, name, obj, options, lines,
             try:
                 references.append(int(l[len('.. ['):l.index(']')]))
             except ValueError:
-                print "WARNING: invalid reference in %s docstring" % name
+                print("WARNING: invalid reference in %s docstring" % name)
     # Start renaming from the biggest number, otherwise we may
     # overwrite references.
     references.sort()
@@ -335,7 +336,7 @@ def mangle_signature(app, what, name, obj, options, args, retann):
        ('initializes x; see ' in obj.__init__.__doc__):
         return ('', '')
     #
-    if not (callable(obj) or hasattr(obj, '__argspec_is_invalid_')):
+    if not (isinstance(obj, collections.Callable) or hasattr(obj, '__argspec_is_invalid_')):
         return (None, None)
     #
     obj_doc = getattr(obj, '__doc__', None)
@@ -361,7 +362,7 @@ def monkeypatch_sphinx_ext_autodoc():
     if autodoc.RstGenerator.format_signature is our_format_signature:
         return
     #
-    print "[numpydoc] Monkeypatching sphinx.ext.autodoc ..."
+    print("[numpydoc] Monkeypatching sphinx.ext.autodoc ...")
     _original_format_signature = autodoc.RstGenerator.format_signature
     autodoc.RstGenerator.format_signature = our_format_signature
 
@@ -381,7 +382,7 @@ def initialize(app):
     
     fn = app.config.numpydoc_phantom_import_file
     if (fn and os.path.isfile(fn)):
-        print "[numpydoc] Phantom importing modules from", fn, "..."
+        print("[numpydoc] Phantom importing modules from", fn, "...")
         import_phantom_module(fn)
 
 def setup(app):
